@@ -1555,6 +1555,11 @@ TF_CAPI_EXPORT extern void TF_DeleteServer(TF_Server* server);
 TF_CAPI_EXPORT extern void TF_RegisterLogListener(
     void (*listener)(const char*));
 
+// Patched for Tensorflow.NET
+TF_CAPI_EXPORT extern void AddControlInput(TF_Graph* graph, TF_Operation* op, TF_Operation* input);
+TF_CAPI_EXPORT extern void UpdateEdge(TF_Graph* graph, TF_Output new_src, TF_Input dst, TF_Status* status);
+TF_CAPI_EXPORT extern void RemoveAllControlInputs(TF_Graph* graph, TF_Operation* op);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

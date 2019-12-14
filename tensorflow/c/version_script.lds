@@ -3,6 +3,9 @@ VERS_1.0 {
   global:
     *TF_*;
     *TFE_*;
+    AddControlInput;
+    UpdateEdge;
+    RemoveAllControlInputs;
 
   # Hide everything else.
   local:
