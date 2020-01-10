@@ -1560,6 +1560,13 @@ TF_CAPI_EXPORT extern void AddControlInput(TF_Graph* graph, TF_Operation* op, TF
 TF_CAPI_EXPORT extern void UpdateEdge(TF_Graph* graph, TF_Output new_src, TF_Input dst, TF_Status* status);
 TF_CAPI_EXPORT extern void RemoveAllControlInputs(TF_Graph* graph, TF_Operation* op);
 
+TF_CAPI_EXPORT extern int TransformGraphWithStringInputs(const char* graph_def_string,
+                                      size_t graph_def_string_len,
+                                      const char* inputs_string,
+                                      const char* outputs_string,
+                                      const char* transforms_string,
+                                      TF_Buffer* output_buffer,
+                                      TF_Status* out_status);
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

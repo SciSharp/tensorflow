@@ -153,6 +153,7 @@ tf_cuda_library(
             "//tensorflow/core:lib_internal",
             "//tensorflow/core/distributed_runtime:server_lib",
             "//tensorflow/core/kernels:logging_ops",
+            "//tensorflow/tools/graph_transforms:transform_graph_lib",
         ],
     }),
 )

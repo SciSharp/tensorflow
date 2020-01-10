@@ -70,6 +70,8 @@ limitations under the License.
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/core/public/version.h"
+#include "tensorflow/c/tf_status_helper.h"
+#include "tensorflow/tools/graph_transforms/transform_graph.h"
 
 // The implementation below is at the top level instead of the
 // brain namespace because we are defining 'extern "C"' functions.
@@ -2617,6 +2619,64 @@ void RemoveAllControlInputs(TF_Graph* graph, TF_Operation* op) {
   for (const Edge* edge : control_edges) {
     graph->graph.RemoveControlEdge(edge);
   }
+}
+
+int TransformGraphWithStringInputs(const char* graph_def_string,
+                                      size_t graph_def_string_len,
+                                      const char* inputs_string,
+                                      const char* outputs_string,
+                                      const char* transforms_string,
+                                      TF_Buffer* output_buffer,
+                                      TF_Status* out_status) {
+
+  std::string graph_str(graph_def_string, graph_def_string_len);                                   
+  printf ("length of graph def: %i\n", graph_str.length());
+  printf ("inputs: %s\n", inputs_string);
+  printf ("outputs: %s\n", outputs_string);
+  printf ("transforms: %s\n", transforms_string);
+
+  tensorflow::GraphDef graph_def;
+  if (!graph_def.ParseFromString(graph_str)) {
+    tensorflow::Set_TF_Status_from_Status(out_status, tensorflow::errors::InvalidArgument(
+        "Couldn't interpret input as a GraphDef"));
+    return -1;
+  }
+
+ tensorflow::graph_transforms::TransformParameters params_list;
+  tensorflow::Status parse_status =
+      tensorflow::graph_transforms::ParseTransformParameters(
+          transforms_string, &params_list);
+  if (!parse_status.ok()) {
+    tensorflow::Set_TF_Status_from_Status(out_status, parse_status);
+    return -1;
+  }
+  std::vector<string> inputs = tensorflow::str_util::Split(inputs_string, ',');
+  std::vector<string> outputs =
+      tensorflow::str_util::Split(outputs_string, ',');
+
+  tensorflow::Status transform_status =
+      tensorflow::graph_transforms::TransformGraph(
+          inputs, outputs, params_list, &graph_def);
+  if (!transform_status.ok()) {
+    tensorflow::Set_TF_Status_from_Status(out_status, transform_status);
+    return -1;
+  }
+  string result;
+  if (!graph_def.SerializeToString(&result)) {
+    Set_TF_Status_from_Status(out_status, tensorflow::errors::InvalidArgument(
+        "Couldn't serialize output as a GraphDef"));
+    return -1;
+  }
+  Set_TF_Status_from_Status(out_status, tensorflow::Status::OK());
+  
+  char* cstr = new char[result.length()];
+  std::copy(result.begin(), result.end(), cstr);
+  output_buffer->data = cstr;
+  output_buffer->length = result.length();
+  output_buffer->data_deallocator = [](void* data, size_t length) { tensorflow::port::Free(data); };
+  printf("output graph length: %i\n", output_buffer->length);
+
+  return output_buffer->length;
 }
 
 }
